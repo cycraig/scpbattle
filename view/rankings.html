@@ -1,0 +1,44 @@
+{{define "title"}}{{index . "title"}}{{end}}
+
+{{define "script"}}
+
+{{end}}
+
+{{define "body"}}
+<div id="rankings-background" style='background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url({{index . "main-image"}})'></div>
+<div id="main" class="rankings-container photo-box"
+    >
+    
+    <table class="pure-table pure-table-horizontal rankings-table">
+        <div class="polaroid">
+            <img class="crown-icon" src='/images/crown.svg' alt="">
+            <img class="polaroid-image" src='{{index . "main-image"}}' draggable="false" alt="">
+            <div class="polaroid-caption">{{ (index . "candidates" 0).Name }}</div>
+        </div>
+        <caption id="rankings-caption">Secure. Contain. <span style="text-decoration: line-through;">Protect.</span> <i style="font-family:'Indie Flower';">Fight!</i></caption>
+        <tbody>
+            {{$row_class:=""}}
+            {{range index . "candidates"}}
+            {{ if (eq .Rank 1) }}
+                {{$row_class = "rank-first top-three"}}
+            {{ else if (eq .Rank 2) }}
+                {{$row_class = "rank-second top-three"}}
+            {{ else if (eq .Rank 3) }}
+                {{$row_class = "rank-third top-three"}}
+            {{ else }}
+                {{$row_class = ""}}
+            {{end}}
+            <tr class="{{$row_class}}">
+                <td class="cell rank">{{ .Rank }}</td>
+                <td class="cell"><a class="name-link" href="{{ .Link }}">{{ .Name }}<img src='/images/external_link.svg'
+                            class="external-link-icon"></a></td>
+                <td class="cell pure-hidden-md">{{ .Desc }}</td>
+                <!-- <td class="cell">{{ .Wins }}</td>
+                <td class="cell">{{ .Losses }}</td> -->
+                <td class="cell rating">{{ .Rating }}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}
