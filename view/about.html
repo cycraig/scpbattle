@@ -1,0 +1,20 @@
+{{define "title"}}
+  {{index . "title"}}
+{{end}}
+
+{{define "script"}}
+
+{{end}}
+
+{{define "body"}}
+  <div class="pure-g">
+    <div class="photo-box pure-u-1-2">
+      
+      <img src={{index . "img_left"}} id="player-one" class="img-vote" draggable="false">
+    </div>
+    <div class="photo-box pure-u-1-2">
+      
+      <img src={{index . "img_right"}} id="player-two" class="img-vote" draggable="false">
+    </div>
+  </div>
+{{end}}

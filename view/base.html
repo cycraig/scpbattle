@@ -1,0 +1,32 @@
+{{define "base"}}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <meta name="description" content="Vote for the best SCP">
+  <title>SCP Battle | {{template "title" .}}</title>
+  <link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
+  <!-- <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous"> -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Indie+Flower&display=swap"> <!--Indie Flower Font-->
+  <link rel="stylesheet" href="/css/pure-min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  {{template "script" .}}
+</head>
+
+<body>
+  <div class="pure-menu pure-menu-horizontal">
+
+      <a class="pure-menu-heading" href="/"><img src='/images/SCP.svg' class="icon" alt=""> <span
+          style="vertical-align: middle;">SCP Battle</span></a>
+      <ul class="pure-menu-list">
+        <li class="pure-menu-item"><a href="/rankings" class="pure-menu-link">Rankings</a></li>
+        <li class="pure-menu-item"><a href="/about" class="pure-menu-link">About</a></li>
+      </ul>
+  </div>
+  {{template "body" .}}
+</body>
+
+</html>
+{{end}}

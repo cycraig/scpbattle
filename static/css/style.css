@@ -1,0 +1,275 @@
+/* https://stackoverflow.com/questions/90178/make-a-div-fill-the-height-of-the-remaining-screen-space */
+
+@font-face {
+    font-family: "ITC Bauhaus LT Demi";
+    src: url("/fonts/ITCBauhausLTDemi/af3da10c5b46a0db2731fe7b7433cf4a.eot");
+    /* IE9*/
+    src: url("/fonts/ITCBauhausLTDemi/af3da10c5b46a0db2731fe7b7433cf4a.eot?#iefix") format("embedded-opentype"), /* IE6-IE8 */
+    url("/fonts/ITCBauhausLTDemi/af3da10c5b46a0db2731fe7b7433cf4a.woff2") format("woff2"), /* chrome、firefox */
+    url("/fonts/ITCBauhausLTDemi/af3da10c5b46a0db2731fe7b7433cf4a.woff") format("woff"), /* chrome、firefox */
+    url("/fonts/ITCBauhausLTDemi/af3da10c5b46a0db2731fe7b7433cf4a.ttf") format("truetype"), /* chrome、firefox、opera、Safari, Android, iOS 4.2+*/
+    url("/fonts/ITCBauhausLTDemi/af3da10c5b46a0db2731fe7b7433cf4a.svg#ITC Bauhaus LT Demi") format("svg");
+    /* iOS 4.1- */
+}
+
+html {
+    cursor: url('/images/SCP_cursor.png') !important;
+    margin: 0;
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    font-family: verdana, arial, helvetica, sans-serif;
+}
+
+#name-bar {
+    display: flex;
+    flex-direction: row;
+    position: absolute;
+    z-index: 1000;
+    top: 16%;
+    padding: 5px 0px;
+    width: calc(100%);
+    background-color: rgba(0, 0, 0, 0.75);
+    letter-spacing: normal;
+    font-family: verdana, arial, helvetica, sans-serif;
+}
+
+.name-block {
+    width: 100%;
+}
+
+.name-block.left {
+    flex: 0 auto auto;
+}
+
+.name-block.right {
+    flex: 0 auto auto;
+}
+
+.name {
+    display: block;
+    margin: 0;
+    text-align: center;
+    color: white;
+}
+
+.desc {
+    display: block;
+    text-align: center;
+    color: white;
+}
+
+.name-header.name-link {
+    color: white;
+}
+
+.name-link:link, .name-link:visited {
+    text-decoration: none;
+}
+
+.name-link:hover, .name-link:active {
+    text-decoration: underline;
+}
+
+.pure-menu-heading {
+    font-family: "ITC Bauhaus LT Demi", arial, sans-serif;
+    font-size: 160%;
+    padding: .25em .5em .25em .25em;
+    text-align: center;
+}
+
+.icon {
+    vertical-align: middle;
+    width: 40px;
+    height: 40px;
+}
+
+.external-link-icon {
+    position: fixed;
+    padding-left: 5px;
+    vertical-align: top;
+    width: 15px;
+    height: 15px;
+    filter: invert();
+    visibility: hidden;
+}
+
+.name-link:hover>.name>.external-link-icon, .name-link:active>.name>.external-link-icon {
+    visibility: visible;
+}
+.name-link:hover>.external-link-icon, .name-link:active>.external-link-icon {
+    visibility: visible;
+}
+
+#rankings-caption {
+    padding: .5em 0;
+    font-size: 140%;
+    font-style: normal;
+    font-weight: bold;
+    font-family: "Trebuchet MS", Trebuchet, Verdana, Arial, Helvetica;
+    background-color: white;
+    border-radius: 10px 10px 0 0;
+}
+
+#icon-middle {
+    display: block;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    background: url('/images/SCP.svg') no-repeat center;
+    background-size: 30%;
+    position: fixed;
+    font-weight: bold;
+    pointer-events: none;
+    filter: invert() opacity(0.01);
+    mix-blend-mode: difference;
+}
+
+.pure-menu {
+    flex: 0 1 auto;
+    background-color: white;
+}
+
+#main {
+    flex: 1 1 auto;
+    background-color: black;
+    cursor: url('/images/SCP_cursor.png');
+}
+
+.img-vote {
+    height: 100%;
+    background-position: center;
+    background-size: cover;
+}
+
+.img-vote:hover, .img-vote:active {
+    cursor: pointer;
+    filter: brightness(1.05);
+}
+
+.img-vote.left {
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+}
+
+#main.rankings-container {
+    background: none;
+}
+.rankings-container {
+    height: 100%;
+    
+    /* background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat; */
+    overflow: auto;
+}
+
+.rankings-table {
+    margin: 1em auto;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: rgb(200, 200, 200);
+    border-collapse: collapse;
+}
+
+#rankings-background {
+    background-color: black;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    filter: blur(5px);
+    -webkit-filter: blur(5px);
+    height: 100%;
+    width: 100%;
+    left: 0;
+    position: fixed;
+    right: 0;
+    z-index: -1;
+    /* Remove white edges due to blurring */
+    transform: scale(1.1); 
+}
+
+.top-three, .top-three>.cell>.name-link {
+    color: white;
+    font-size: 110%;
+}
+
+.rank-first {
+    font-weight: bold;
+}
+
+.cell>.name-link {
+    color: rgb(200, 200, 200);
+}
+
+.cell.rank {
+    text-align: center;
+}
+
+.cell.rating {
+    text-align: right;
+}
+
+.polaroid {
+    display: block;
+    padding: 7px;
+    background: #eee;
+    border: 0;
+    box-shadow: 0px 2px 15px #333;
+    -moz-box-shadow: 0px 2px 15px #333;
+    position: relative;
+    z-index: 100;
+    top: 50px;
+    height: 100px;
+    width: 100px;
+    margin: auto;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    transform: rotateZ(-20deg) translateX(-30%) translateY(10%);
+    background-image: linear-gradient(3deg, #000000 0%, transparent 3%, rgba(255, 255, 255, 0.15));
+}
+
+.polaroid-image {
+    max-width: 100%;
+    height: auto;
+    filter: grayscale() sepia(30%);
+    user-drag: none; 
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+.polaroid-caption {
+    font-size: 95%;
+    text-align: center;
+    vertical-align: bottom;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    font-family:'Indie Flower';
+}
+
+.crown-icon {
+    width: 55px;
+    height: 55px;
+    top: -11px;
+    left: -7px;
+    position: absolute;
+    z-index: 200;
+    filter: invert(12%) sepia(82%) saturate(3740%) hue-rotate(355deg) brightness(93%) contrast(88%);
+    user-drag: none; 
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
