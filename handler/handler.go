@@ -3,6 +3,7 @@ package handler
 import "github.com/cycraig/scpbattle/store"
 
 /*
+Handler
 Encapsulating class so we can access the SCP store on requests.
 */
 type Handler struct {

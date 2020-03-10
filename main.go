@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"os"
 	"path"
 
 	"github.com/labstack/echo/v4"
@@ -64,7 +65,7 @@ func main() {
 
 	// Using a map of template files instead of parseGlob because template
 	// definitions overwrite each other, e.g. body will be overwritten by
-	// the html template loaded last.
+	// the html template parsed last.
 	templates := make(map[string]*template.Template)
 	// renderer := &TemplateRenderer{
 	// 	templates: template.Must(template.ParseGlob(path.Join("view", "*.html"))),
@@ -113,5 +114,10 @@ func main() {
 	e.GET("/rankings", h.RankingsPageHandler)
 
 	// Start server
-	e.Logger.Fatal(e.Start(":1323"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		// local development
+		port = "1323"
+	}
+	e.Logger.Fatal(e.Start(":" + port))
 }

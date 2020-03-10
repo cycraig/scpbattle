@@ -93,6 +93,8 @@ func (cache *SCPCache) synchroniseThenInvalidate() (err error) {
 func (cache *SCPCache) Update(scpRef *model.SCP) error {
 	// Should be no need for locking here, bypasses the cache
 	// TODO: only update changes if possible
+	// TODO: store changes in the cache and only update once
+	//       every 10 seconds or something...
 	return cache.scpStore.Update(scpRef)
 }
 

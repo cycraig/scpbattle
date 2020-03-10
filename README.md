@@ -13,6 +13,6 @@ air
 
 ### Links:
 
-Echo: https://github.com/labstack/echo
-GORM: https://github.com/jinzhu/gorm
-Air: https://github.com/cosmtrek/air
+- Echo: https://github.com/labstack/echo
+- GORM: https://github.com/jinzhu/gorm
+- Air: https://github.com/cosmtrek/air
