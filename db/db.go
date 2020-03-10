@@ -3,7 +3,7 @@ package db
 import (
 	"github.com/cycraig/scpbattle/model"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	_ "github.com/jinzhu/gorm/dialects/sqlite" // import the sqlite driver statically
 )
 
 func NewDB() *gorm.DB {

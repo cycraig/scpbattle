@@ -1,0 +1,9 @@
+{
+  "name": "SCP Battle",
+  "description": "Vote for your favourite SCP!",
+  "keywords": [
+    "SCP"
+  ],
+  "website": "https://github.com/cycraig/scpbattle",
+  "repository": "https://github.com/cycraig/scpbattle"
+}
