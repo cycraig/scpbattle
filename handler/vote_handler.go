@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"sync"
 
+	"github.com/cycraig/scpbattle/model"
 	"github.com/labstack/echo/v4"
 )
 
@@ -63,50 +65,55 @@ func (h *Handler) VoteHandler(c echo.Context) error {
 func (h *Handler) processVoteRequest(c echo.Context, winnerID uint, loserID uint) {
 	winner, err := h.scpCache.GetByID(winnerID)
 	if err != nil {
-		msg := fmt.Sprintf("Error finding SCP id: %d ", winnerID)
-		c.Logger().Error(msg, err)
+		c.Logger().Error(fmt.Sprintf("Error finding SCP id: %d ", winnerID), err)
 		return
 	}
 	loser, err := h.scpCache.GetByID(loserID)
 	if err != nil {
-		msg := fmt.Sprintf("Error finding SCP id: %d ", loserID)
-		c.Logger().Error(msg, err)
+		c.Logger().Error(fmt.Sprintf("Error finding SCP id: %d ", loserID), err)
 		return
 	}
 	if winner == nil {
-		msg := fmt.Sprintf("Could not find SCP id: %d", winnerID)
-		c.Logger().Warn(msg)
+		c.Logger().Warn(fmt.Sprintf("Could not find SCP id: %d", winnerID))
 		return
 	}
 	if loser == nil {
-		msg := fmt.Sprintf("Could not find SCP id: %d", loserID)
-		c.Logger().Warn(msg)
+		c.Logger().Warn(fmt.Sprintf("Could not find SCP id: %d", loserID))
 		return
 	}
 
 	winner.Wins++
 	loser.Losses++
-	// TODO: Elo rating
-	K := 42.0
+	// Calculate new Elo ratings
+	K := 20.0 // 42.0
 	Pwinner := eloExpectedProbability(winner.Rating, loser.Rating)
 	Ploser := eloExpectedProbability(loser.Rating, winner.Rating)
-	fmt.Printf("Pwinner: %.4f\n", Pwinner)
-	fmt.Printf("Ploser: %.4f\n", Ploser)
-	fmt.Printf("winnerRating before: %.2f\n", winner.Rating)
-	fmt.Printf("loserRating before: %.2f\n", loser.Rating)
-	winner.Rating = winner.Rating + K*(1.0-Pwinner)
-	loser.Rating = loser.Rating + K*(0.0-Ploser)
-	fmt.Printf("winnerRating after: %.2f\n", winner.Rating)
-	fmt.Printf("loserRating after: %.2f\n", loser.Rating)
+	winnerDiff := K * (1.0 - Pwinner)
+	loserDiff := K * (0.0 - Ploser)
+	// fmt.Printf("Pwinner: %.4f\n", Pwinner)
+	// fmt.Printf("Ploser: %.4f\n", Ploser)
+	// fmt.Printf("winnerRating before: %.2f\n", winner.Rating)
+	// fmt.Printf("loserRating before: %.2f\n", loser.Rating)
+	h.updateEloRating(winner, winnerDiff)
+	h.updateEloRating(loser, loserDiff)
+	// fmt.Printf("winnerRating after: %.2f\n", winner.Rating)
+	// fmt.Printf("loserRating after: %.2f\n", loser.Rating)
 
-	// TODO: use a lock/atomic increments to ensure there are no lost updates.
-	// Just calculate the difference and pass it to a goroutine or something to
-	// increment/decrement the current values.
-	// Yes this can bias the Elo ratings since if the base values between
-	// calculating the rating difference to add and updating it, theoretically
-	// the difference calculated would need change to be be more fair.
-	// However, it's better than missing a vote entirely.
 	h.scpCache.Update(winner, loser)
+}
+
+func (h *Handler) updateEloRating(scp *model.SCP, ratingDiff float64) {
+	// Use a fine-grained lock per SCP to prevent lost updates.
+	if lock, ok := h.scpLock[scp.ID]; ok {
+		lock.Lock()
+		defer lock.Unlock()
+	} else {
+		lock = &sync.Mutex{}
+		h.scpLock[scp.ID] = lock
+		lock.Lock()
+		defer lock.Unlock()
+	}
+	scp.Rating += ratingDiff
 }
 
 func eloExpectedProbability(rating1 float64, rating2 float64) float64 {
