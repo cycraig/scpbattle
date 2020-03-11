@@ -22,7 +22,7 @@ type SCPCache struct {
 	updateTTL          time.Duration // default 10 seconds
 	rankingLastUpdated time.Time
 	rankingTTL         time.Duration // default 30 seconds
-	invalidated        map[uint]bool // which SCPs need to be written back to the database
+	dirty              map[uint]bool // which SCPs need to be written back to the database
 	lock               sync.Mutex
 }
 
@@ -32,10 +32,10 @@ func NewSCPCache(scpStore *SCPStore) *SCPCache {
 
 func NewSCPCacheWithDuration(scpStore *SCPStore, updateTTL time.Duration, rankingTTL time.Duration) *SCPCache {
 	return &SCPCache{
-		scpStore:    scpStore,
-		updateTTL:   updateTTL,
-		rankingTTL:  rankingTTL,
-		invalidated: make(map[uint]bool),
+		scpStore:   scpStore,
+		updateTTL:  updateTTL,
+		rankingTTL: rankingTTL,
+		dirty:      make(map[uint]bool),
 	}
 }
 
@@ -90,9 +90,9 @@ func (cache *SCPCache) synchroniseThenInvalidate() (err error) {
 }
 
 func (cache *SCPCache) Update(scpRef ...*model.SCP) error {
-	// The reference to the SCP already has the changes, just mark it as needing updating.
+	// The reference to the SCP already has the changes, just mark it as dirty.
 	for _, scp := range scpRef {
-		cache.invalidated[scp.ID] = true
+		cache.dirty[scp.ID] = true
 	}
 	if cache.lastUpdated.IsZero() || time.Now().After(cache.lastUpdated.Add(cache.updateTTL)) {
 		return cache.synchroniseDatabase()
@@ -102,7 +102,7 @@ func (cache *SCPCache) Update(scpRef ...*model.SCP) error {
 
 func (cache *SCPCache) forceUpdate(scpRef *model.SCP) error {
 	// Writes the object back to the database immediately.
-	cache.invalidated[scpRef.ID] = false
+	cache.dirty[scpRef.ID] = false
 	return cache.scpStore.Update(scpRef)
 }
 
@@ -112,13 +112,12 @@ func (cache *SCPCache) synchroniseDatabase() (err error) {
 	if err != nil {
 		return err
 	}
-	for id, needsUpdate := range cache.invalidated {
+	for id, needsUpdate := range cache.dirty {
 		if needsUpdate {
 			if scp, ok := (*scpMap)[id]; ok {
-				// Using a goroutine to avoid blocking, but hides errors...
 				err = cache.forceUpdate(scp)
 			} else {
-				delete(cache.invalidated, id)
+				delete(cache.dirty, id)
 			}
 		}
 	}
