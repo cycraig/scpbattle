@@ -24,6 +24,8 @@ type SCPCache struct {
 	rankingTTL         time.Duration // default 30 seconds
 	dirty              map[uint]bool // which SCPs need to be written back to the database
 	lock               sync.Mutex
+	updateLock         sync.Mutex
+	rankingsLock       sync.Mutex
 }
 
 func NewSCPCache(scpStore *SCPStore) *SCPCache {
@@ -40,21 +42,23 @@ func NewSCPCacheWithDuration(scpStore *SCPStore, updateTTL time.Duration, rankin
 }
 
 func (cache *SCPCache) getSCPMap() (*map[uint]*model.SCP, error) {
-	cache.lock.Lock()
-	defer cache.lock.Unlock()
 	if cache.scpMap == nil {
-		allSCPs, err := cache.scpStore.GetAllSCPs()
-		if err != nil {
-			return nil, err
+		cache.lock.Lock()
+		defer cache.lock.Unlock()
+		if cache.scpMap == nil {
+			allSCPs, err := cache.scpStore.GetAllSCPs()
+			if err != nil {
+				return nil, err
+			}
+			scpMap := make(map[uint]*model.SCP)
+			scpIDs := make([]uint, len(allSCPs))
+			for i, scp := range allSCPs {
+				scpMap[scp.ID] = scp
+				scpIDs[i] = scp.ID
+			}
+			cache.scpMap = scpMap
+			cache.scpIDs = scpIDs
 		}
-		scpMap := make(map[uint]*model.SCP)
-		scpIDs := make([]uint, len(allSCPs))
-		for i, scp := range allSCPs {
-			scpMap[scp.ID] = scp
-			scpIDs[i] = scp.ID
-		}
-		cache.scpMap = scpMap
-		cache.scpIDs = scpIDs
 	}
 	return &cache.scpMap, nil
 }
@@ -78,10 +82,10 @@ func (cache *SCPCache) Create(scp *model.SCP) error {
 }
 
 func (cache *SCPCache) synchroniseThenInvalidate() (err error) {
-	// Writes changes back to the database then invalidates cached SCP collections,
+	// Write changes back to the database then invalidate cached SCP collections,
 	// causing us to re-fetch the database contents.
-	cache.lock.Lock()
-	defer cache.lock.Unlock()
+	cache.updateLock.Lock()
+	defer cache.updateLock.Unlock()
 	err = cache.synchroniseDatabase()
 	cache.scpMap = nil
 	cache.scpListRanked = nil
@@ -95,7 +99,12 @@ func (cache *SCPCache) Update(scpRef ...*model.SCP) error {
 		cache.dirty[scp.ID] = true
 	}
 	if cache.lastUpdated.IsZero() || time.Now().After(cache.lastUpdated.Add(cache.updateTTL)) {
-		return cache.synchroniseDatabase()
+		cache.updateLock.Lock()
+		defer cache.updateLock.Unlock()
+		// Double check in case another goroutine already updated and this one was waiting.
+		if cache.lastUpdated.IsZero() || time.Now().After(cache.lastUpdated.Add(cache.updateTTL)) {
+			return cache.synchroniseDatabase()
+		}
 	}
 	return nil
 }
@@ -116,6 +125,9 @@ func (cache *SCPCache) synchroniseDatabase() (err error) {
 		if needsUpdate {
 			if scp, ok := (*scpMap)[id]; ok {
 				err = cache.forceUpdate(scp)
+				if err != nil {
+					return err
+				}
 			} else {
 				delete(cache.dirty, id)
 			}
@@ -163,22 +175,28 @@ func (cache *SCPCache) GetRankedSCPs() ([]model.SCP, error) {
 	// Avoid too many expensive calls to get SCPs sorted by rating by caching the last calculated result for a period of time.
 	// The returned SCP objects should be treated as read-only, as they are intentionally not in sync with the map.
 	if cache.scpListRanked == nil || cache.rankingLastUpdated.IsZero() || time.Now().After(cache.rankingLastUpdated.Add(cache.rankingTTL)) {
-		scpMap, err := cache.getSCPMap()
-		if err != nil {
-			return nil, err
+		cache.rankingsLock.Lock()
+		defer cache.rankingsLock.Unlock()
+		// Double check in case another goroutine already updated and this one was waiting.
+		if cache.scpListRanked == nil || cache.rankingLastUpdated.IsZero() || time.Now().After(cache.rankingLastUpdated.Add(cache.rankingTTL)) {
+
+			scpMap, err := cache.getSCPMap()
+			if err != nil {
+				return nil, err
+			}
+			rankedSCPs := make([]model.SCP, len(*scpMap))
+			i := 0
+			for _, scpRef := range *scpMap {
+				rankedSCPs[i] = *scpRef
+				i++
+			}
+			// Sort SCPs by ELO rating in descending order.
+			sort.Slice(rankedSCPs, func(i, j int) bool {
+				return rankedSCPs[i].Rating > rankedSCPs[j].Rating
+			})
+			cache.scpListRanked = rankedSCPs
+			cache.rankingLastUpdated = time.Now()
 		}
-		rankedSCPs := make([]model.SCP, len(*scpMap))
-		i := 0
-		for _, scpRef := range *scpMap {
-			rankedSCPs[i] = *scpRef
-			i++
-		}
-		// Sort SCPs by ELO rating in descending order.
-		sort.Slice(rankedSCPs, func(i, j int) bool {
-			return rankedSCPs[i].Rating > rankedSCPs[j].Rating
-		})
-		cache.scpListRanked = rankedSCPs
-		cache.rankingLastUpdated = time.Now()
 	}
 	// Can re-use cached result otherwise.
 	return cache.scpListRanked, nil
