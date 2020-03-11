@@ -14,23 +14,28 @@ import (
 type SCPCache struct {
 	// Caches the contents of the database in memory to avoid slow calls on every request
 	// lowercase => do not expose/export these variables
-	scpStore          *SCPStore
-	scpMap            map[uint]*model.SCP // use getSCPMap() exclusively
-	scpIDs            []uint              // holds the keys of the scpMap to simplify random lookups
-	scpListRanked     []model.SCP
-	lastSynchronised  time.Time
-	synchronisePeriod time.Duration // default 10 seconds
-	lock              sync.Mutex
+	scpStore           *SCPStore
+	scpMap             map[uint]*model.SCP // use getSCPMap() exclusively
+	scpIDs             []uint              // holds the keys of the scpMap to simplify random lookups
+	scpListRanked      []model.SCP
+	lastUpdated        time.Time
+	updateTTL          time.Duration // default 5 seconds
+	rankingLastUpdated time.Time
+	rankingTTL         time.Duration // default 10 seconds
+	invalidated        map[uint]bool // which SCPs need to be written back to the database
+	lock               sync.Mutex
 }
 
 func NewSCPCache(scpStore *SCPStore) *SCPCache {
-	return NewSCPCacheWithDuration(scpStore, 10*time.Second)
+	return NewSCPCacheWithDuration(scpStore, 5*time.Second, 10*time.Second)
 }
 
-func NewSCPCacheWithDuration(scpStore *SCPStore, synchronisePeriod time.Duration) *SCPCache {
+func NewSCPCacheWithDuration(scpStore *SCPStore, updateTTL time.Duration, rankingTTL time.Duration) *SCPCache {
 	return &SCPCache{
-		scpStore:          scpStore,
-		synchronisePeriod: synchronisePeriod,
+		scpStore:    scpStore,
+		updateTTL:   updateTTL,
+		rankingTTL:  rankingTTL,
+		invalidated: make(map[uint]bool),
 	}
 }
 
@@ -73,29 +78,52 @@ func (cache *SCPCache) Create(scp *model.SCP) error {
 }
 
 func (cache *SCPCache) synchroniseThenInvalidate() (err error) {
-	// Invalidates cached SCP collections
+	// Writes changes back to the database then invalidates cached SCP collections,
+	// causing us to re-fetch the database contents.
 	cache.lock.Lock()
 	defer cache.lock.Unlock()
-	if cache.scpMap != nil {
-		// TODO: batch updates / only update changes / better error handling
-		for _, scpRef := range cache.scpMap {
-			if err = cache.Update(scpRef); err != nil {
-				break
-			}
-		}
-	}
+	err = cache.synchroniseDatabase()
 	cache.scpMap = nil
 	cache.scpListRanked = nil
 	cache.scpIDs = nil
 	return err
 }
 
-func (cache *SCPCache) Update(scpRef *model.SCP) error {
-	// Should be no need for locking here, bypasses the cache
-	// TODO: only update changes if possible
-	// TODO: store changes in the cache and only update once
-	//       every 10 seconds or something...
+func (cache *SCPCache) Update(scpRef ...*model.SCP) error {
+	// The reference to the SCP already has the changes, just mark it as needing updating.
+	for _, scp := range scpRef {
+		cache.invalidated[scp.ID] = true
+	}
+	if cache.lastUpdated.IsZero() || time.Now().After(cache.lastUpdated.Add(cache.updateTTL)) {
+		return cache.synchroniseDatabase()
+	}
+	return nil
+}
+
+func (cache *SCPCache) forceUpdate(scpRef *model.SCP) error {
+	// Writes the object back to the database immediately.
+	cache.invalidated[scpRef.ID] = false
 	return cache.scpStore.Update(scpRef)
+}
+
+func (cache *SCPCache) synchroniseDatabase() (err error) {
+	// Check which SCP objects are invalid and write them back to the database.
+	scpMap, err := cache.getSCPMap()
+	if err != nil {
+		return err
+	}
+	for id, needsUpdate := range cache.invalidated {
+		if needsUpdate {
+			if scp, ok := (*scpMap)[id]; ok {
+				// Using a goroutine to avoid blocking, but hides errors...
+				err = cache.forceUpdate(scp)
+			} else {
+				delete(cache.invalidated, id)
+			}
+		}
+	}
+	cache.lastUpdated = time.Now()
+	return err
 }
 
 func (cache *SCPCache) GetRandomSCPs(n int) ([]*model.SCP, error) {
@@ -135,7 +163,7 @@ func (cache *SCPCache) GetRandomSCPs(n int) ([]*model.SCP, error) {
 func (cache *SCPCache) GetRankedSCPs() ([]model.SCP, error) {
 	// Avoid too many expensive calls to get SCPs sorted by rating by caching the last calculated result for a period of time.
 	// The returned SCP objects should be treated as read-only, as they are intentionally not in sync with the map.
-	if cache.scpListRanked == nil || cache.lastSynchronised.IsZero() || time.Now().After(cache.lastSynchronised.Add(cache.synchronisePeriod)) {
+	if cache.scpListRanked == nil || cache.rankingLastUpdated.IsZero() || time.Now().After(cache.rankingLastUpdated.Add(cache.rankingTTL)) {
 		scpMap, err := cache.getSCPMap()
 		if err != nil {
 			return nil, err
@@ -151,7 +179,7 @@ func (cache *SCPCache) GetRankedSCPs() ([]model.SCP, error) {
 			return rankedSCPs[i].Rating > rankedSCPs[j].Rating
 		})
 		cache.scpListRanked = rankedSCPs
-		cache.lastSynchronised = time.Now()
+		cache.rankingLastUpdated = time.Now()
 	}
 	// Can re-use cached result otherwise.
 	return cache.scpListRanked, nil

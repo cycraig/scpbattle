@@ -106,8 +106,7 @@ func (h *Handler) processVoteRequest(c echo.Context, winnerID uint, loserID uint
 	// calculating the rating difference to add and updating it, theoretically
 	// the difference calculated would need change to be be more fair.
 	// However, it's better than missing a vote entirely.
-	h.scpCache.Update(winner)
-	h.scpCache.Update(loser)
+	h.scpCache.Update(winner, loser)
 }
 
 func eloExpectedProbability(rating1 float64, rating2 float64) float64 {
