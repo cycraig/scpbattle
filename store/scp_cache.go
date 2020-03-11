@@ -19,15 +19,15 @@ type SCPCache struct {
 	scpIDs             []uint              // holds the keys of the scpMap to simplify random lookups
 	scpListRanked      []model.SCP
 	lastUpdated        time.Time
-	updateTTL          time.Duration // default 5 seconds
+	updateTTL          time.Duration // default 10 seconds
 	rankingLastUpdated time.Time
-	rankingTTL         time.Duration // default 10 seconds
+	rankingTTL         time.Duration // default 30 seconds
 	invalidated        map[uint]bool // which SCPs need to be written back to the database
 	lock               sync.Mutex
 }
 
 func NewSCPCache(scpStore *SCPStore) *SCPCache {
-	return NewSCPCacheWithDuration(scpStore, 5*time.Second, 10*time.Second)
+	return NewSCPCacheWithDuration(scpStore, 10*time.Second, 30*time.Second)
 }
 
 func NewSCPCacheWithDuration(scpStore *SCPStore, updateTTL time.Duration, rankingTTL time.Duration) *SCPCache {
