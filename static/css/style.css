@@ -159,6 +159,9 @@ body {
     .pure-menu.responsive {
         position: relative;
     }
+    .pure-menu.responsive .pure-menu-list {
+        width: 100%;
+    }
     .pure-menu.responsive .pure-menu-item, .pure-menu.responsive .pure-menu-heading {
         float: none;
         display: block;
