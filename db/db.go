@@ -6,8 +6,8 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite" // import the sqlite driver statically
 )
 
-func NewDB() *gorm.DB {
-	db, err := gorm.Open("sqlite3", "./data.db")
+func NewDB(fname string) *gorm.DB {
+	db, err := gorm.Open("sqlite3", fname)
 	if err != nil {
 		panic(err)
 	}

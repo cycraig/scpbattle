@@ -92,7 +92,7 @@ func main() {
 	}))
 
 	// Initialise database
-	d := db.NewDB()
+	d := db.NewDB("data.db")
 	defer d.Close()
 	scpCache := store.NewSCPCache(store.NewSCPStore(d))
 	h := handler.NewHandler(scpCache)
