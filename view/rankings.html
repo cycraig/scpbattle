@@ -12,7 +12,7 @@
     <table class="pure-table pure-table-horizontal rankings-table">
         <div class="polaroid">
             <img class="crown-icon" src='/images/crown.svg' alt="">
-            <img class="polaroid-image" src='{{index . "main-image"}}' draggable="false" alt="">
+            <div class="polaroid-image" style='background-image: url({{index . "main-image"}})' draggable="false" alt=""></div>
             <div class="polaroid-caption">{{ (index . "candidates" 0).Name }}</div>
         </div>
         <caption id="rankings-caption">Secure. Contain. <span style="text-decoration: line-through;">Protect.</span> <i style="font-family:'Indie Flower';">Fight!</i></caption>
