@@ -134,6 +134,36 @@ body {
 .pure-menu {
     flex: 0 1 auto;
     background-color: white;
+    z-index: 1003;
+}
+
+.bars {
+    width: 1.5em;
+    height: 1.5em;
+    display: none;
+    position: absolute;
+    right: 5px;
+    top: 7px;
+}
+
+@media screen and (max-width: 600px) {
+    .pure-menu .pure-menu-item {
+        display: none;
+    }
+    .pure-menu .bars {
+        display: block;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .pure-menu.responsive {
+        position: relative;
+    }
+    .pure-menu.responsive .pure-menu-item, .pure-menu.responsive .pure-menu-heading {
+        float: none;
+        display: block;
+        text-align: left;
+    }
 }
 
 #main {
