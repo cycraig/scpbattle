@@ -21,7 +21,7 @@ type SCPCache struct {
 	lastUpdated        time.Time
 	updateTTL          time.Duration // default 10 seconds
 	rankingLastUpdated time.Time
-	rankingTTL         time.Duration // default 30 seconds
+	rankingTTL         time.Duration // default 15 seconds
 	dirty              map[uint]bool // which SCPs need to be written back to the database
 	lock               sync.Mutex
 	updateLock         sync.Mutex
@@ -29,7 +29,7 @@ type SCPCache struct {
 }
 
 func NewSCPCache(scpStore *SCPStore) *SCPCache {
-	return NewSCPCacheWithDuration(scpStore, 10*time.Second, 30*time.Second)
+	return NewSCPCacheWithDuration(scpStore, 10*time.Second, 15*time.Second)
 }
 
 func NewSCPCacheWithDuration(scpStore *SCPStore, updateTTL time.Duration, rankingTTL time.Duration) *SCPCache {
@@ -87,6 +87,8 @@ func (cache *SCPCache) synchroniseThenInvalidate() (err error) {
 	cache.updateLock.Lock()
 	defer cache.updateLock.Unlock()
 	err = cache.synchroniseDatabase()
+	cache.lock.Lock()
+	defer cache.lock.Unlock()
 	cache.scpMap = nil
 	cache.scpListRanked = nil
 	cache.scpIDs = nil
@@ -94,7 +96,7 @@ func (cache *SCPCache) synchroniseThenInvalidate() (err error) {
 }
 
 func (cache *SCPCache) Update(scpRef ...*model.SCP) error {
-	// The reference to the SCP already has the changes, just mark it as dirty.
+	// The reference to the SCP object already has the changes, just mark it as dirty.
 	for _, scp := range scpRef {
 		cache.dirty[scp.ID] = true
 	}
@@ -121,12 +123,13 @@ func (cache *SCPCache) synchroniseDatabase() (err error) {
 	if err != nil {
 		return err
 	}
+	// Batch update (gorm doesn't seem to support real batch SQL updates...)
 	for id, needsUpdate := range cache.dirty {
 		if needsUpdate {
 			if scp, ok := (*scpMap)[id]; ok {
 				err = cache.forceUpdate(scp)
 				if err != nil {
-					return err
+					break
 				}
 			} else {
 				delete(cache.dirty, id)
@@ -144,7 +147,7 @@ func (cache *SCPCache) GetRandomSCPs(n int) ([]*model.SCP, error) {
 	}
 	numSCPs := len(*scpMap)
 	if n < 1 || n > len(*scpMap) {
-		return nil, errors.New(fmt.Sprintf("Invalid length argument: %d. #SCPs = %d", n, numSCPs))
+		return nil, fmt.Errorf("invalid length argument: %d. #SCPs = %d", n, numSCPs)
 	}
 	randomSCPs := make([]*model.SCP, n)
 	scpIDs := cache.scpIDs
@@ -166,7 +169,7 @@ func (cache *SCPCache) GetRandomSCPs(n int) ([]*model.SCP, error) {
 		totalIterations++
 	}
 	if totalIterations >= maxIterations && i < n {
-		return nil, errors.New("Random number generation exceeded maximimum iterations.")
+		return nil, errors.New("random number generation exceeded maximimum iterations")
 	}
 	return randomSCPs, nil
 }

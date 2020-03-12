@@ -82,10 +82,8 @@ func (h *Handler) processVoteRequest(c echo.Context, winnerID uint, loserID uint
 		return
 	}
 
-	winner.Wins++
-	loser.Losses++
 	// Calculate new Elo ratings
-	K := 20.0 // 42.0
+	K := 20.0
 	Pwinner := eloExpectedProbability(winner.Rating, loser.Rating)
 	Ploser := eloExpectedProbability(loser.Rating, winner.Rating)
 	winnerDiff := K * (1.0 - Pwinner)
@@ -94,15 +92,18 @@ func (h *Handler) processVoteRequest(c echo.Context, winnerID uint, loserID uint
 	// fmt.Printf("Ploser: %.4f\n", Ploser)
 	// fmt.Printf("winnerRating before: %.2f\n", winner.Rating)
 	// fmt.Printf("loserRating before: %.2f\n", loser.Rating)
-	h.updateEloRating(winner, winnerDiff)
-	h.updateEloRating(loser, loserDiff)
+	h.updateEloRating(winner, winnerDiff, 1, 0)
+	h.updateEloRating(loser, loserDiff, 0, 1)
 	// fmt.Printf("winnerRating after: %.2f\n", winner.Rating)
 	// fmt.Printf("loserRating after: %.2f\n", loser.Rating)
 
-	h.scpCache.Update(winner, loser)
+	err = h.scpCache.Update(winner, loser)
+	if err != nil {
+		c.Logger().Error("Error during update: ", err)
+	}
 }
 
-func (h *Handler) updateEloRating(scp *model.SCP, ratingDiff float64) {
+func (h *Handler) updateEloRating(scp *model.SCP, ratingDiff float64, winDiff uint64, lossDiff uint64) {
 	// Use a fine-grained lock per SCP to prevent lost updates.
 	if lock, ok := h.scpLock[scp.ID]; ok {
 		lock.Lock()
@@ -114,6 +115,8 @@ func (h *Handler) updateEloRating(scp *model.SCP, ratingDiff float64) {
 		defer lock.Unlock()
 	}
 	scp.Rating += ratingDiff
+	scp.Wins += winDiff
+	scp.Losses += lossDiff
 }
 
 func eloExpectedProbability(rating1 float64, rating2 float64) float64 {

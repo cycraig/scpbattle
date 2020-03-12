@@ -13,9 +13,9 @@
 }
 
 html {
-    cursor: url('/images/SCP_cursor.png') !important;
     margin: 0;
     height: 100%;
+    width: 100%;
 }
 
 body {
@@ -102,6 +102,7 @@ body {
 .name-link:hover>.name>.external-link-icon, .name-link:active>.name>.external-link-icon {
     visibility: visible;
 }
+
 .name-link:hover>.external-link-icon, .name-link:active>.external-link-icon {
     visibility: visible;
 }
@@ -160,9 +161,9 @@ body {
 #main.rankings-container {
     background: none;
 }
+
 .rankings-container {
     height: 100%;
-    
     /* background-position: center;
     background-size: cover;
     background-repeat: no-repeat; */
@@ -190,7 +191,7 @@ body {
     right: 0;
     z-index: -1;
     /* Remove white edges due to blurring */
-    transform: scale(1.1); 
+    transform: scale(1.1);
 }
 
 .top-three, .top-three>.cell>.name-link {
@@ -238,7 +239,7 @@ body {
     max-width: 100%;
     height: auto;
     filter: grayscale() sepia(30%);
-    user-drag: none; 
+    user-drag: none;
     user-select: none;
     -moz-user-select: none;
     -webkit-user-drag: none;
@@ -255,7 +256,7 @@ body {
     -webkit-user-drag: none;
     -webkit-user-select: none;
     -ms-user-select: none;
-    font-family:'Indie Flower';
+    font-family: 'Indie Flower';
 }
 
 .crown-icon {
@@ -266,7 +267,7 @@ body {
     position: absolute;
     z-index: 200;
     filter: invert(12%) sepia(82%) saturate(3740%) hue-rotate(355deg) brightness(93%) contrast(88%);
-    user-drag: none; 
+    user-drag: none;
     user-select: none;
     -moz-user-select: none;
     -webkit-user-drag: none;
