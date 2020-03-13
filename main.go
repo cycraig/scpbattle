@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
@@ -92,7 +93,13 @@ func main() {
 	}))
 
 	// Initialise database
-	d := db.NewDB("data.db")
+	dbURL := os.Getenv("DATABASE_URL")
+	var d *gorm.DB
+	if dbURL == "" {
+		d = db.NewDB("sqlite3", "data.db", true)
+	} else {
+		d = db.NewDB("postgres", dbURL, false)
+	}
 	defer d.Close()
 	scpCache := store.NewSCPCache(store.NewSCPStore(d))
 	h := handler.NewHandler(scpCache)
