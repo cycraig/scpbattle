@@ -137,20 +137,20 @@ body {
     z-index: 1003;
 }
 
-.bars {
+.bars-holder {
     width: 1.5em;
     height: 1.5em;
     display: none;
     position: absolute;
-    right: 5px;
-    top: 7px;
+    right: 12px;
+    top: 14px;
 }
 
 @media screen and (max-width: 600px) {
     .pure-menu .pure-menu-item {
         display: none;
     }
-    .pure-menu .bars {
+    .pure-menu .bars-holder {
         display: block;
     }
 }
