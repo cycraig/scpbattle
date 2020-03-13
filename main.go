@@ -63,6 +63,7 @@ func main() {
 	e := echo.New()
 
 	e.Debug = true
+	e.IPExtractor = echo.ExtractIPFromXFFHeader() // Heroku uses x-forwarded-for
 
 	// Using a map of template files instead of parseGlob because template
 	// definitions overwrite each other, e.g. body will be overwritten by
