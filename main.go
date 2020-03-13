@@ -74,6 +74,7 @@ func main() {
 	templates["vote.html"] = template.Must(template.ParseFiles(path.Join("view", "vote.html"), path.Join("view", "base.html")))
 	templates["rankings.html"] = template.Must(template.ParseFiles(path.Join("view", "rankings.html"), path.Join("view", "base.html")))
 	templates["error.html"] = template.Must(template.ParseFiles(path.Join("view", "error.html"), path.Join("view", "base.html")))
+	templates["about.html"] = template.Must(template.ParseFiles(path.Join("view", "about.html"), path.Join("view", "base.html")))
 	e.Renderer = &TemplateRegistry{
 		templates: templates,
 	}
@@ -119,6 +120,7 @@ func main() {
 	e.POST("/vote", h.VoteHandler)
 	e.GET("/health", h.HealthCheckHandler)
 	e.GET("/rankings", h.RankingsPageHandler)
+	e.GET("/about", h.AboutPageHandler)
 
 	// Start server
 	port := os.Getenv("PORT")

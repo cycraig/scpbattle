@@ -1,20 +1,38 @@
-{{define "title"}}
-  {{index . "title"}}
-{{end}}
+{{define "title"}}{{index . "title"}}{{end}}
 
 {{define "script"}}
 
 {{end}}
 
 {{define "body"}}
-  <div class="pure-g">
-    <div class="photo-box pure-u-1-2">
-      
-      <img src={{index . "img_left"}} id="player-one" class="img-vote" draggable="false">
-    </div>
-    <div class="photo-box pure-u-1-2">
-      
-      <img src={{index . "img_right"}} id="player-two" class="img-vote" draggable="false">
-    </div>
+<div id="main" class="about-container">
+  <div class="header">
+    <h1>About</h1>
   </div>
+  <div class="content">
+    <h2 class="content-subhead"></h2>
+    <p>
+      This website is inspired by the SCP Foundation, which was born from the wonderful work of many people on <a href="http://www.scp-wiki.net/">scp-wiki.net</a>.
+
+      This website is not affiliated with nor endorsed by <a href="http://www.scp-wiki.net/">scp-wiki.net</a> or any other SCP-related project.
+    </p>
+    <h2 class="content-subhead">Licensing</h2>
+    <p>
+      The content of <a href="http://www.scp-wiki.net/">scp-wiki.net</a> is released under the <a href="https://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-ShareAlike 3.0 License</a> unless otherwise stated on individual pages. This includes the names and most of the images used on this site. The exceptions to this are the following:
+      <br/>
+      <ul>
+        <li><a href="http://www.scp-wiki.net/scp-096">SCP-096</a> image: source <a href="https://www.reddit.com/r/SCP/comments/76cxsx/scp096_artwork/">r/SCP</a> by <a href="https://www.reddit.com/user/_Veliass/">_Veliass</a></li>
+        <li><a href="http://www.scp-wiki.net/scp-173">SCP-173</a> image: not for commercial use, rights retained by <a href="http://izumikato.com/#Untitled-2004">Izumi Kato</a></li>
+        <li><a href="http://www.scp-wiki.net/scp-939">SCP-939</a> image: source <a href="https://www.artstation.com/artwork/NLmWD">artstation.com</a> by <a href="https://cinemamind.artstation.com/">David Romero</a></li>
+      </ul>
+      See the <a href="http://www.scp-wiki.net/licensing-guide ">scp-wiki.net licensing guide</a> for more information on the licensing of SCP content.
+    </p>
+
+    <h2 class="content-subhead">Contact</h2>
+    <p>
+      If you need to contact the author of this website for any reason, you may do so at: 
+      <br/>scpbattle __AT__ protonmail.com
+    </p>
+  </div>
+</div>
 {{end}}
