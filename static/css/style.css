@@ -137,6 +137,10 @@ body {
     z-index: 1003;
 }
 
+.pure-menu-link {
+    color: #666;
+}
+
 .bars-holder {
     width: 1.5em;
     height: 1.5em;
@@ -172,7 +176,6 @@ body {
 #main {
     flex: 1 1 auto;
     background-color: black;
-    cursor: url('/images/SCP_cursor.png');
 }
 
 .img-vote {
@@ -192,6 +195,10 @@ body {
 }
 
 #main.rankings-container {
+    background: none;
+}
+
+#main.about-container {
     background: none;
 }
 
@@ -307,4 +314,26 @@ body {
     -webkit-user-drag: none;
     -webkit-user-select: none;
     -ms-user-select: none;
+}
+
+.content {
+    margin: 0 auto;
+    padding: 0 2em;
+    max-width: 800px;
+    margin-bottom: 50px;
+    line-height: 1.6em;
+}
+
+.header {
+    margin: 0;
+    color: #333;
+    text-align: center;
+    padding: 2.5em 2em 0;
+    border-bottom: 1px solid #eee;
+}
+
+.header h1 {
+    margin: 0.2em 0;
+    font-size: 3em;
+    font-weight: 300;
 }
