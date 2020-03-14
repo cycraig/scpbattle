@@ -21,7 +21,7 @@ type SCPCache struct {
 	lastUpdated        time.Time
 	updateTTL          time.Duration // default 10 seconds
 	rankingLastUpdated time.Time
-	rankingTTL         time.Duration // default 15 seconds
+	rankingTTL         time.Duration // default 10 seconds
 	dirty              map[uint]bool // which SCPs need to be written back to the database
 	lock               sync.Mutex
 	updateLock         sync.Mutex
@@ -29,7 +29,7 @@ type SCPCache struct {
 }
 
 func NewSCPCache(scpStore *SCPStore) *SCPCache {
-	return NewSCPCacheWithDuration(scpStore, 10*time.Second, 15*time.Second)
+	return NewSCPCacheWithDuration(scpStore, 10*time.Second, 10*time.Second)
 }
 
 func NewSCPCacheWithDuration(scpStore *SCPStore, updateTTL time.Duration, rankingTTL time.Duration) *SCPCache {
