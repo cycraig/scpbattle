@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// VotePageHandler renders the vote.html template.
 func (h *Handler) VotePageHandler(c echo.Context) error {
 	randomSCPs, err := h.scpCache.GetRandomSCPs(2)
 	if err != nil {
@@ -25,22 +26,22 @@ func (h *Handler) VotePageHandler(c echo.Context) error {
 	}
 	left := randomSCPs[0]
 	right := randomSCPs[1]
-	imageDir := "images/"
 	return c.Render(http.StatusOK, "vote.html", echo.Map{
 		"title":      "Vote",
 		"id_left":    left.ID,
 		"name_left":  left.Name,
 		"desc_left":  left.Description,
-		"img_left":   imageDir + left.Image,
+		"img_left":   h.imageDir + left.Image,
 		"link_left":  left.Link,
 		"id_right":   right.ID,
 		"name_right": right.Name,
 		"desc_right": right.Description,
-		"img_right":  imageDir + right.Image,
+		"img_right":  h.imageDir + right.Image,
 		"link_right": right.Link,
 	})
 }
 
+// VoteRequest contains a single vote outcome between two SCPs from a client.
 type VoteRequest struct {
 	// Using platform-dependent types is concerning, I wonder why gorm defaults to uint instead of uint64...
 	// We'll never go above 2^32-1 SCPs anyway, so it doesn't really matter.
@@ -48,6 +49,7 @@ type VoteRequest struct {
 	LoserID  uint `json:"loserID" form:"loserID" query:"loserID"`
 }
 
+// VoteHandler processes client votes from vote.html as POST requests.
 func (h *Handler) VoteHandler(c echo.Context) error {
 	// TODO: validate request by sending a hashcode or something to prevent spamming
 	//       vote requests without interacting with the page.

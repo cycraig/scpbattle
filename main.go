@@ -20,10 +20,12 @@ import (
 	"github.com/cycraig/scpbattle/store"
 )
 
+// TemplateRegistry holds a map of named HTML templates.
 type TemplateRegistry struct {
 	templates map[string]*template.Template
 }
 
+// Render applies the specified named HTML template with the given data.
 func (t *TemplateRegistry) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
 	tmpl, ok := t.templates[name]
 	if !ok {
@@ -34,8 +36,9 @@ func (t *TemplateRegistry) Render(w io.Writer, name string, data interface{}, c 
 	return tmpl.ExecuteTemplate(w, "base", data)
 }
 
+// Clacks "Do you not know that a man is not dead while his name is still spoken?"
+// Adds the X-Clacks-Overhead header to HTTP responses.
 func Clacks(next echo.HandlerFunc) echo.HandlerFunc {
-	// "Do you not know that a man is not dead while his name is still spoken?"
 	return func(c echo.Context) error {
 		c.Response().Header().Add("X-Clacks-Overhead", "GNU Terry Pratchett")
 		err := next(c)
@@ -43,8 +46,8 @@ func Clacks(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+// CacheControlHeaders middleware adds the Cache-Control header when serving certain static files in Echo.
 func CacheControlHeaders(next echo.HandlerFunc) echo.HandlerFunc {
-	// Enable caching of static content
 	shortCacheMaxAge := 86400   // 1 day
 	longCacheMaxAge := 31536000 // 1 year
 	shortCacheableExts := []string{".ico", ".jpg", ".jpeg", ".png", ".svg", ".css"}
@@ -74,8 +77,8 @@ func CacheControlHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+// GzipSkipper for the Echo Gzip middleware skips compressing common image files.
 func GzipSkipper(c echo.Context) bool {
-	// Do not try compress images
 	uri := c.Request().RequestURI
 	excludeExts := []string{".ico", ".jpg", ".jpeg", ".png"}
 	for _, ext := range excludeExts {
@@ -150,7 +153,7 @@ func main() {
 	}
 	defer d.Close()
 	scpCache := store.NewSCPCache(store.NewSCPStore(d))
-	h := handler.NewHandler(scpCache)
+	h := handler.NewHandler(scpCache, "images/")
 
 	// Populate example data
 	// TODO: replace this
