@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
@@ -37,6 +38,37 @@ func Clacks(next echo.HandlerFunc) echo.HandlerFunc {
 	// "Do you not know that a man is not dead while his name is still spoken?"
 	return func(c echo.Context) error {
 		c.Response().Header().Add("X-Clacks-Overhead", "GNU Terry Pratchett")
+		err := next(c)
+		return err
+	}
+}
+
+func CacheControlHeaders(next echo.HandlerFunc) echo.HandlerFunc {
+	// Enable caching of static content
+	shortCacheMaxAge := 86400 // 1 day
+	longCacheMaxAge := 604800 // 7 days
+	shortCacheableExts := []string{".ico", ".jpg", ".jpeg", ".png", ".svg", ".css"}
+	longCacheableExts := []string{".eot", ".ttf", ".woff", ".woff2"}
+	return func(c echo.Context) error {
+		uri := c.Request().RequestURI
+		cacheMaxAge := 0
+		for _, ext := range shortCacheableExts {
+			if strings.HasSuffix(uri, ext) {
+				cacheMaxAge = shortCacheMaxAge
+				break
+			}
+		}
+		if cacheMaxAge == 0 {
+			for _, ext := range longCacheableExts {
+				if strings.HasSuffix(uri, ext) {
+					cacheMaxAge = longCacheMaxAge
+					break
+				}
+			}
+		}
+		if cacheMaxAge != 0 {
+			c.Response().Header().Add("Cache-Control", fmt.Sprintf("max-age=%d", cacheMaxAge))
+		}
 		err := next(c)
 		return err
 	}
@@ -92,6 +124,7 @@ func main() {
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
 	}))
+	e.Use(CacheControlHeaders)
 	e.Use(middleware.Static("static"))
 
 	// Initialise database
