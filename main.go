@@ -45,8 +45,8 @@ func Clacks(next echo.HandlerFunc) echo.HandlerFunc {
 
 func CacheControlHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 	// Enable caching of static content
-	shortCacheMaxAge := 86400 // 1 day
-	longCacheMaxAge := 604800 // 7 days
+	shortCacheMaxAge := 86400   // 1 day
+	longCacheMaxAge := 31536000 // 1 year
 	shortCacheableExts := []string{".ico", ".jpg", ".jpeg", ".png", ".svg", ".css"}
 	longCacheableExts := []string{".eot", ".ttf", ".woff", ".woff2"}
 	return func(c echo.Context) error {
@@ -72,6 +72,18 @@ func CacheControlHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 		err := next(c)
 		return err
 	}
+}
+
+func GzipSkipper(c echo.Context) bool {
+	// Do not try compress images
+	uri := c.Request().RequestURI
+	excludeExts := []string{".ico", ".jpg", ".jpeg", ".png"}
+	for _, ext := range excludeExts {
+		if strings.HasSuffix(uri, ext) {
+			return true
+		}
+	}
+	return false
 }
 
 func filterIP(next echo.HandlerFunc) echo.HandlerFunc {
@@ -122,7 +134,8 @@ func main() {
 	e.Use(middleware.BodyLimit("1M"))
 	e.Use(Clacks)
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
-		Level: 5,
+		Skipper: GzipSkipper,
+		Level:   5,
 	}))
 	e.Use(CacheControlHeaders)
 	e.Use(middleware.Static("static"))
