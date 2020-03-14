@@ -9,6 +9,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"   // sqlite driver static import
 )
 
+// NewDB instantiates a new GORM database.
 func NewDB(dbType string, dbURL string, doLog bool) *gorm.DB {
 	if dbType != "sqlite3" && dbType != "postgres" {
 		panic(errors.New("unkown/unsupported database type: " + dbType))

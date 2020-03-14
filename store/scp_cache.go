@@ -11,8 +11,8 @@ import (
 	"github.com/cycraig/scpbattle/model"
 )
 
+// SCPCache caches SCP instances from the database in memory to avoid slow calls on every request.
 type SCPCache struct {
-	// Caches the contents of the database in memory to avoid slow calls on every request
 	// lowercase => do not expose/export these variables
 	scpStore           *SCPStore
 	scpMap             map[uint]*model.SCP // use getSCPMap() exclusively
@@ -28,10 +28,12 @@ type SCPCache struct {
 	rankingsLock       sync.Mutex
 }
 
+// NewSCPCache instantiates a new SCPCache with the default cache TTL durations.
 func NewSCPCache(scpStore *SCPStore) *SCPCache {
 	return NewSCPCacheWithDuration(scpStore, 10*time.Second, 10*time.Second)
 }
 
+// NewSCPCacheWithDuration instantiates a new SCPCache with the specified cache TTL durations.
 func NewSCPCacheWithDuration(scpStore *SCPStore, updateTTL time.Duration, rankingTTL time.Duration) *SCPCache {
 	return &SCPCache{
 		scpStore:   scpStore,
@@ -63,6 +65,7 @@ func (cache *SCPCache) getSCPMap() (*map[uint]*model.SCP, error) {
 	return &cache.scpMap, nil
 }
 
+// GetByID returns a reference to the SCP with the given ID if it exists, otherwise nil.
 func (cache *SCPCache) GetByID(id uint) (*model.SCP, error) {
 	scpMap, err := cache.getSCPMap()
 	if err != nil {
@@ -72,6 +75,7 @@ func (cache *SCPCache) GetByID(id uint) (*model.SCP, error) {
 	return scpRef, nil
 }
 
+// Create adds the SCP reference to the database immediately, unless the database already contains the entry.
 func (cache *SCPCache) Create(scp *model.SCP) error {
 	// Creating a new SCP requires synchronising the map and database, since a new entry is added
 	if err := cache.scpStore.Create(scp); err != nil {
@@ -95,6 +99,8 @@ func (cache *SCPCache) synchroniseThenInvalidate() (err error) {
 	return err
 }
 
+// Update marks SCP references as changed.
+// Changes are written to the database whenever this function is called at least updateTTL seconds apart.
 func (cache *SCPCache) Update(scpRef ...*model.SCP) error {
 	// The reference to the SCP object already has the changes, just mark it as dirty.
 	for _, scp := range scpRef {
@@ -140,6 +146,7 @@ func (cache *SCPCache) synchroniseDatabase() (err error) {
 	return err
 }
 
+// GetRandomSCPs returns a slice of n unique, pseudo-uniformly-randomly selected SCP instances.
 func (cache *SCPCache) GetRandomSCPs(n int) ([]*model.SCP, error) {
 	scpMap, err := cache.getSCPMap()
 	if err != nil {
@@ -174,6 +181,7 @@ func (cache *SCPCache) GetRandomSCPs(n int) ([]*model.SCP, error) {
 	return randomSCPs, nil
 }
 
+// GetRankedSCPs returns a slice containing all SCP instances in descending order of their rating.
 func (cache *SCPCache) GetRankedSCPs() ([]model.SCP, error) {
 	// Avoid too many expensive calls to get SCPs sorted by rating by caching the last calculated result for a period of time.
 	// The returned SCP objects should be treated as read-only, as they are intentionally not in sync with the map.

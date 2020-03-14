@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// Candidate wraps SCP fields to be rendered in the rankings.html template.
 type Candidate struct {
 	Rank   int
 	Name   string
@@ -17,6 +18,7 @@ type Candidate struct {
 	Losses uint64
 }
 
+// RankingsPageHandler renders the rankings.html template.
 func (h *Handler) RankingsPageHandler(c echo.Context) error {
 	rankedSCPs, err := h.scpCache.GetRankedSCPs()
 	if err != nil {
@@ -37,10 +39,9 @@ func (h *Handler) RankingsPageHandler(c echo.Context) error {
 			Losses: scp.Losses,
 		}
 	}
-	IMAGE_DIR := "images/"
 	return c.Render(http.StatusOK, "rankings.html", echo.Map{
 		"title":      "Rankings",
-		"main-image": IMAGE_DIR + rankedSCPs[0].Image,
+		"main-image": h.imageDir + rankedSCPs[0].Image,
 		"candidates": candidates,
 	})
 }
