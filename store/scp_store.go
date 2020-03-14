@@ -36,36 +36,10 @@ func (store *SCPStore) Update(scp *model.SCP) error {
 }
 
 func (store *SCPStore) GetAllSCPs() ([]*model.SCP, error) {
-	// TODO: cache the whole table in memory (it's tiny) / array
-	// and select random rows from that?
-	// This orderBy generates random values for each table row, extremely slow!
 	var allSCPs []*model.SCP
 	err := store.db.Find(&allSCPs).Error
 	if err != nil {
 		return nil, err
 	}
 	return allSCPs, nil
-}
-
-func (store *SCPStore) GetRandomSCPs(numRandom uint) ([]model.SCP, error) {
-	// TODO: cache the whole table in memory (it's tiny) / array
-	// and select random rows from that?
-	// This orderBy generates random values for each table row, extremely slow!
-	var randomSCPs []model.SCP
-	err := store.db.Order(gorm.Expr("random()")).Limit(numRandom).Find(&randomSCPs).Error
-	if err != nil {
-		return nil, err
-	}
-	return randomSCPs, nil
-}
-
-func (store *SCPStore) GetRankedSCPs() ([]model.SCP, error) {
-	// TODO: cache this result and only recalculate on a timeout?
-	// (probably best to make a separate class for that)
-	var rankedSCPs []model.SCP
-	err := store.db.Order("rating desc").Find(&rankedSCPs).Error
-	if err != nil {
-		return nil, err
-	}
-	return rankedSCPs, nil
 }
