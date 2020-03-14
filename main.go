@@ -109,12 +109,18 @@ func main() {
 	// Populate example data
 	// TODO: replace this
 	scpCache.Create(model.NewSCP("SCP-049", "The Plague Doctor", "scp_049.jpg", "http://www.scp-wiki.net/scp-049"))
+	scpCache.Create(model.NewSCP("SCP-055", "Not a Sphere?", "scp_055.jpg", "http://www.scp-wiki.net/scp-055"))
+	scpCache.Create(model.NewSCP("SCP-087", "The Stairwell", "scp_087.jpg", "http://www.scp-wiki.net/scp-087"))
+	scpCache.Create(model.NewSCP("SCP-093", "Red Sea Object", "scp_093.jpg", "http://www.scp-wiki.net/scp-093"))
 	scpCache.Create(model.NewSCP("SCP-096", "The Shy Guy", "scp_096.jpg", "http://www.scp-wiki.net/scp-096"))
 	scpCache.Create(model.NewSCP("SCP-106", "The Old Man", "scp_106.jpg", "http://www.scp-wiki.net/scp-106"))
 	scpCache.Create(model.NewSCP("SCP-173", "The Sculpture", "scp_173.jpg", "http://www.scp-wiki.net/scp-173"))
 	scpCache.Create(model.NewSCP("SCP-682", "The Hard-To-Destroy Reptile", "scp_682.jpg", "http://www.scp-wiki.net/scp-682"))
 	scpCache.Create(model.NewSCP("SCP-939", "With Many Voices", "scp_939.jpg", "http://www.scp-wiki.net/scp-939"))
 	scpCache.Create(model.NewSCP("●●|●●●●●|●●|●", "", "scp_2521.jpg", "http://www.scp-wiki.net/scp-2521"))
+	scpCache.Create(model.NewSCP("SCP-3000", "Anantashesha", "scp_3000.jpg", "http://www.scp-wiki.net/scp-3000"))
+	scpCache.Create(model.NewSCP("SCP-3001", "Red Reality", "scp_3001.jpg", "http://www.scp-wiki.net/scp-3001"))
+	scpCache.Create(model.NewSCP("SCP-____-J", "Procrastinati", "scp_j.jpg", "http://www.scp-wiki.net/scp-j"))
 
 	// Routes
 	e.GET("/", h.VotePageHandler)
