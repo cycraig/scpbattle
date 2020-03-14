@@ -161,6 +161,7 @@ func main() {
 	scpCache.Create(model.NewSCP("SCP-096", "The Shy Guy", "scp_096.jpg", "http://www.scp-wiki.net/scp-096"))
 	scpCache.Create(model.NewSCP("SCP-106", "The Old Man", "scp_106.jpg", "http://www.scp-wiki.net/scp-106"))
 	scpCache.Create(model.NewSCP("SCP-173", "The Sculpture", "scp_173.jpg", "http://www.scp-wiki.net/scp-173"))
+	scpCache.Create(model.NewSCP("SCP-610", "The Flesh that Hates", "scp_610.jpg", "http://www.scp-wiki.net/scp-610"))
 	scpCache.Create(model.NewSCP("SCP-682", "The Hard-To-Destroy Reptile", "scp_682.jpg", "http://www.scp-wiki.net/scp-682"))
 	scpCache.Create(model.NewSCP("SCP-939", "With Many Voices", "scp_939.jpg", "http://www.scp-wiki.net/scp-939"))
 	scpCache.Create(model.NewSCP("●●|●●●●●|●●|●", "", "scp_2521.jpg", "http://www.scp-wiki.net/scp-2521"))
