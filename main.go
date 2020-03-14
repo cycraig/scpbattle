@@ -86,13 +86,13 @@ func main() {
 	e.Pre(middleware.Logger())
 	e.Pre(middleware.Recover())
 	e.Pre(middleware.RemoveTrailingSlash())
-	e.Use(middleware.Static("static"))
 	e.Pre(filterIP)
 	e.Use(middleware.BodyLimit("1M"))
 	e.Use(Clacks)
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
 	}))
+	e.Use(middleware.Static("static"))
 
 	// Initialise database
 	dbURL := os.Getenv("DATABASE_URL")
