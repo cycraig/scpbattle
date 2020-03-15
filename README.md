@@ -19,6 +19,18 @@ cd scpbattle
 air
 ```
 
+- Updating Heroku deployment:
+```
+go mod tidy
+go mod vendor
+
+# Commit any new go packages
+# git add -A .
+# git commit
+
+git push heroku master
+```
+
 ### Links:
 
 - SCP Foundation: http://www.scp-wiki.net/
