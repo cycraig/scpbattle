@@ -19,6 +19,11 @@ cd scpbattle
 air
 ```
 
+- Run tests:
+```
+go test ./store -cover
+```
+
 - Updating Heroku deployment:
 ```
 go mod tidy

@@ -81,11 +81,12 @@ func (cache *SCPCache) Create(scp *model.SCP) error {
 	if err := cache.scpStore.Create(scp); err != nil {
 		return err
 	}
-	cache.synchroniseThenInvalidate()
+	cache.SynchroniseThenInvalidate()
 	return nil
 }
 
-func (cache *SCPCache) synchroniseThenInvalidate() (err error) {
+// SynchroniseThenInvalidate writes changes back to the database and invalidates the cache.
+func (cache *SCPCache) SynchroniseThenInvalidate() (err error) {
 	// Write changes back to the database then invalidate cached SCP collections,
 	// causing us to re-fetch the database contents.
 	cache.updateLock.Lock()
@@ -102,8 +103,16 @@ func (cache *SCPCache) synchroniseThenInvalidate() (err error) {
 // Update marks SCP references as changed.
 // Changes are written to the database whenever this function is called at least updateTTL seconds apart.
 func (cache *SCPCache) Update(scpRef ...*model.SCP) error {
+	scpMap, err := cache.getSCPMap()
+	if err != nil {
+		return err
+	}
 	// The reference to the SCP object already has the changes, just mark it as dirty.
 	for _, scp := range scpRef {
+		// Ensure the scpRef is in the map, otherwise the changes are in an instance not managed by the cache!
+		if mapSCP, ok := (*scpMap)[scp.ID]; !ok || mapSCP != scp {
+			return errors.New("cannot update SCP instance not from the cache; use GetByID/GetRandomSCPs")
+		}
 		cache.dirty[scp.ID] = true
 	}
 	if cache.lastUpdated.IsZero() || time.Now().After(cache.lastUpdated.Add(cache.updateTTL)) {
@@ -203,6 +212,10 @@ func (cache *SCPCache) GetRankedSCPs() ([]model.SCP, error) {
 			}
 			// Sort SCPs by ELO rating in descending order.
 			sort.Slice(rankedSCPs, func(i, j int) bool {
+				if rankedSCPs[i].Rating == rankedSCPs[j].Rating {
+					// break ties by ID
+					return rankedSCPs[i].ID < rankedSCPs[j].ID
+				}
 				return rankedSCPs[i].Rating > rankedSCPs[j].Rating
 			})
 			cache.scpListRanked = rankedSCPs
