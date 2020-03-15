@@ -44,8 +44,7 @@ func (store *SCPStore) Update(scp *model.SCP) error {
 // GetAllSCPs returns a slice containing all SCP instances from the database.
 func (store *SCPStore) GetAllSCPs() ([]*model.SCP, error) {
 	var allSCPs []*model.SCP
-	err := store.db.Find(&allSCPs).Error
-	if err != nil {
+	if err := store.db.Find(&allSCPs).Error; err != nil {
 		return nil, err
 	}
 	return allSCPs, nil
