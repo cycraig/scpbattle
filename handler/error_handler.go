@@ -13,13 +13,17 @@ func HTTPErrorHandler(err error, c echo.Context) {
 	if he, ok := err.(*echo.HTTPError); ok {
 		code = he.Code
 	}
-	// errorPage := path.Join("static", fmt.Sprintf("%d.html", code))
-	// if err := c.File(errorPage); err != nil {
-	// 	c.Logger().Error(err)
-	// }
+
 	c.Logger().Error(err)
-	c.Render(http.StatusOK, "error.html", echo.Map{
-		"title": "Error",
-		"error": fmt.Sprintf("%d", code),
-	})
+
+	if code == http.StatusForbidden {
+		// Don't bother rendering anything for blocked IP addresses,
+		// the css files etc. get blocked anyway.
+		c.HTML(code, fmt.Sprintf("%d", code))
+	} else {
+		c.Render(http.StatusOK, "error.html", echo.Map{
+			"title": "Error",
+			"error": fmt.Sprintf("%d", code),
+		})
+	}
 }

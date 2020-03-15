@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"net/http"
 	"os"
 	"path"
 	"strings"
 
 	"github.com/jinzhu/gorm"
+	"github.com/jpillora/ipfilter"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
@@ -55,6 +57,9 @@ func CacheControlHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		uri := c.Request().RequestURI
 		cacheMaxAge := 0
+		// TODO: it might be faster to traverse a trie (containing reversed extensions)
+		// or hashmaps of all the extensions of the same length.
+		// With such few extensions it's fine for now, need to do benchmarks to see if it's worthwhile.
 		for _, ext := range shortCacheableExts {
 			if strings.HasSuffix(uri, ext) {
 				cacheMaxAge = shortCacheMaxAge
@@ -90,16 +95,18 @@ func GzipSkipper(c echo.Context) bool {
 }
 
 func filterIP(next echo.HandlerFunc) echo.HandlerFunc {
-	// TODO: expand on this
+	// TODO: implement a radix tree / ART to perform CIDR lookups...
+	filter := ipfilter.New(ipfilter.Options{
+		BlockedCountries: []string{"CN"},
+		BlockedIPs:       []string{"146.141.0.0/16"},
+		BlockByDefault:   false,
+	})
 	return func(c echo.Context) error {
-		// Block requests from localhost as a test.
-		// ipAddr := c.RealIP()
-		// fmt.Println("Connection from: " + ipAddr)
-		// if ipAddr == "127.0.0.1" || ipAddr == "::1" {
-		// 	//c.Response().WriteHeader(http.StatusUnauthorized)
-		// 	return echo.NewHTTPError(http.StatusUnauthorized,
-		// 		fmt.Sprintf("IP address %s not allowed", ipAddr))
-		// }
+		ipAddr := c.RealIP()
+		if !filter.Allowed(ipAddr) {
+			return echo.NewHTTPError(http.StatusForbidden,
+				fmt.Sprintf("Blocked IP address %s", ipAddr))
+		}
 		err := next(c)
 		return err
 	}
