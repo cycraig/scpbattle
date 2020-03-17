@@ -4,6 +4,8 @@ Vote for your favourite SCP at [scpbattle.tk](http://scpbattle.tk/) (redirects t
 
 This is essentially a FaceMash clone for SCPs built using the [Echo web framework](https://github.com/labstack/echo) over a few days to learn [Go](https://golang.org/).
 
+Open-sourced because there weren't any good examples of how to implement best-practices like cache-control headers when I started this.
+
 ## Development:
 
 - Install [Go v1.13](https://golang.org/dl/) (later versions may or may not work)
