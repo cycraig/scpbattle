@@ -1,6 +1,6 @@
 # SCP Battle
 
-Vote for your favourite SCP at [scpbattle.tk](http://scpbattle.tk/) (redirects to Heroku).
+Vote for your favourite SCP at [scpbattle.tk](https://scpbattle.craigbester.com) (redirects to Heroku).
 
 This is essentially a FaceMash clone for SCPs built using the [Echo web framework](https://github.com/labstack/echo) over a few days to learn [Go](https://golang.org/).
 
