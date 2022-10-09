@@ -182,7 +182,7 @@ func main() {
 	// Routes
 	e.GET("/", h.VotePageHandler)
 	e.POST("/vote", h.VoteHandler)
-	e.GET("/health", h.HealthCheckHandler)
+	e.GET("/healthz", h.HealthCheckHandler)
 	e.GET("/rankings", h.RankingsPageHandler)
 	e.GET("/about", h.AboutPageHandler)
 
