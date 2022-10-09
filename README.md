@@ -8,7 +8,7 @@ Open-sourced because there weren't any good examples of how to implement best-pr
 
 ## Development:
 
-- Install [Go v1.13](https://golang.org/dl/) (later versions may or may not work)
+- Install [Go](https://golang.org/dl/) (^1.13).
 - Start the webserver locally ([localhost:1323](http://localhost:1323/)):
 ```
 go run main.go
@@ -26,16 +26,28 @@ air
 go test ./store -cover
 ```
 
-- Updating Heroku deployment:
-```
+## Deployment
+
+- Vendor dependencies:
+```shell
 go mod tidy
 go mod vendor
+```
 
-# Commit any new go packages
-# git add -A .
-# git commit
+- Build the executable:
+```shell
+go build -tags netgo -mod vendor -ldflags '-s -w' -o app
+```
 
-git push heroku master
+- Configure database and port environment variables:
+```shell
+export DATABASE_URL="postgres://user:password@address/database"
+export PORT="8080"
+```
+
+- Start the server:
+```shell
+./app
 ```
 
 ### Links:
