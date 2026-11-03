@@ -1,40 +1,38 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2015 LabStack LLC and Echo contributors
+
 package middleware
 
 import (
 	"fmt"
 	"io"
-	"sync"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/bytes"
 )
 
-type (
-	// BodyLimitConfig defines the config for BodyLimit middleware.
-	BodyLimitConfig struct {
-		// Skipper defines a function to skip middleware.
-		Skipper Skipper
+// BodyLimitConfig defines the config for BodyLimit middleware.
+type BodyLimitConfig struct {
+	// Skipper defines a function to skip middleware.
+	Skipper Skipper
 
-		// Maximum allowed size for a request body, it can be specified
-		// as `4x` or `4xB`, where x is one of the multiple from K, M, G, T or P.
-		Limit string `yaml:"limit"`
-		limit int64
-	}
+	// Maximum allowed size for a request body, it can be specified
+	// as `4x` or `4xB`, where x is one of the multiple from K, M, G, T or P.
+	Limit string `yaml:"limit"`
+	limit int64
+}
 
-	limitedReader struct {
-		BodyLimitConfig
-		reader  io.ReadCloser
-		read    int64
-		context echo.Context
-	}
-)
+type limitedReader struct {
+	BodyLimitConfig
+	reader io.ReadCloser
+	read   int64
+	err    error
+}
 
-var (
-	// DefaultBodyLimitConfig is the default BodyLimit middleware config.
-	DefaultBodyLimitConfig = BodyLimitConfig{
-		Skipper: DefaultSkipper,
-	}
-)
+// DefaultBodyLimitConfig is the default BodyLimit middleware config.
+var DefaultBodyLimitConfig = BodyLimitConfig{
+	Skipper: DefaultSkipper,
+}
 
 // BodyLimit returns a BodyLimit middleware.
 //
@@ -59,11 +57,10 @@ func BodyLimitWithConfig(config BodyLimitConfig) echo.MiddlewareFunc {
 	}
 
 	limit, err := bytes.Parse(config.Limit)
-	if err != nil {
+	if err != nil || limit < 0 {
 		panic(fmt.Errorf("echo: invalid body-limit=%s", config.Limit))
 	}
 	config.limit = limit
-	pool := limitedReaderPool(config)
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -79,10 +76,7 @@ func BodyLimitWithConfig(config BodyLimitConfig) echo.MiddlewareFunc {
 			}
 
 			// Based on content read
-			r := pool.Get().(*limitedReader)
-			r.Reset(req.Body, c)
-			defer pool.Put(r)
-			req.Body = r
+			req.Body = &limitedReader{BodyLimitConfig: config, reader: req.Body}
 
 			return next(c)
 		}
@@ -90,28 +84,35 @@ func BodyLimitWithConfig(config BodyLimitConfig) echo.MiddlewareFunc {
 }
 
 func (r *limitedReader) Read(b []byte) (n int, err error) {
-	n, err = r.reader.Read(b)
-	r.read += int64(n)
-	if r.read > r.limit {
-		return n, echo.ErrStatusRequestEntityTooLarge
+	// A zero limit has historically disabled the read limit in v4.
+	if r.limit == 0 {
+		return r.reader.Read(b)
 	}
-	return
+	if r.err != nil {
+		return 0, r.err
+	}
+	if len(b) == 0 {
+		return 0, nil
+	}
+
+	remaining := r.limit - r.read
+	// Read at most one byte beyond the limit to distinguish an exact-size body
+	// from an oversized one without exposing the extra byte to the caller.
+	// Unlike http.MaxBytesReader, this reader does not signal net/http to close
+	// the connection after the limit is exceeded.
+	if int64(len(b)) > remaining {
+		b = b[:remaining+1]
+	}
+	n, err = r.reader.Read(b)
+	if int64(n) > remaining {
+		r.read = r.limit
+		r.err = echo.ErrStatusRequestEntityTooLarge
+		return int(remaining), r.err
+	}
+	r.read += int64(n)
+	return n, err
 }
 
 func (r *limitedReader) Close() error {
 	return r.reader.Close()
-}
-
-func (r *limitedReader) Reset(reader io.ReadCloser, context echo.Context) {
-	r.reader = reader
-	r.context = context
-	r.read = 0
-}
-
-func limitedReaderPool(c BodyLimitConfig) sync.Pool {
-	return sync.Pool{
-		New: func() interface{} {
-			return &limitedReader{BodyLimitConfig: c}
-		},
-	}
 }
